@@ -13,16 +13,15 @@ I use [Pangolin](https://github.com/stevenlovegrove/Pangolin) for visualization 
 Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**.
   
 ## Building ##
-
-Find the latest version on [Github](https://github.com/georgebola/Octree):
-```
+``
 git clone https://github.com/georgebola/Octree
-```
+
 mkdir build\
 cd build\
 cmake ..\
-make \
-
+make
+``
 ## Testing ##
-
+``
 ./sample/sample
+``

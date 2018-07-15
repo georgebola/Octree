@@ -18,10 +18,10 @@ Find the latest version on [Github](https://github.com/georgebola/Octree):
 ```
 git clone https://github.com/georgebola/Octree
 ```
-mkdir build
-cd build
-cmake ..
-make 
+mkdir build\
+cd build\
+cmake ..\
+make \
 
 ## Testing ##
 

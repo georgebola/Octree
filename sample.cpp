@@ -1,38 +1,3 @@
-//
-//  sample.cpp
-//  
-//
-//  Created by Eduardo Poyart on 6/5/12.
-//
-
-/*
-Copyright (c) 2012, Eduardo Poyart.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-* Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include <iostream>
 // The Octree library resides in a single header file.
 #include "Octree.h"
@@ -40,7 +5,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <math.h>
 #include <stdlib.h>
+
+#include "obj_reader/obj_reader.cpp"
+#include "Stopwatch.h"
+
+#include <pangolin/pangolin.h>
 using namespace std;
+
+objReader pointcloud;
 
 // Any 3D vector implementation can be used, as long as it can be converted
 // to float[3]. Here we use MyPoint.
@@ -75,7 +47,7 @@ struct Node
 };
 
 #define NUM_PARTICLES 10000000
-#define R 0.01f
+#define R 1.0f
 #define EPSILON 0.0001f
 
 // This class does the work of counting particles while traversing the octree.
@@ -112,15 +84,41 @@ public:
         return true;
     }
 };
-                
+
+
+objReader readObj(){
+    objReader testobj;
+
+    char* filename = "Z6.obj";
+    testobj.objLoadFile(filename);
+    testobj.objLoadModel();
+    cout<<"No. of vertices: " << testobj.nVertex << endl;
+
+    return testobj;
+}
+
+
 int main()
 {
-    cout << "Number of particles: " << NUM_PARTICLES << endl;
+    
+    pointcloud = readObj();
+    const int nPoints = pointcloud.nVertex;
+    cout << "Number of particles: " << nPoints << endl;
     cout << "Initializing particles, uniform distribution in cube ([0,1], [0,1], [0,1])." << endl;
+
+
     vector<Particle> myParticles;
-    for (int i = 0; i < NUM_PARTICLES; i++)
-        myParticles.push_back(Particle(
-            (float)rand()/RAND_MAX, (float)rand()/RAND_MAX, (float)rand()/RAND_MAX));
+
+
+    for (int i = 0; i < nPoints; i++){
+        float x = (float)pointcloud.vertexArray[i].x;
+        float y = (float)pointcloud.vertexArray[i].y;
+        float z = (float)pointcloud.vertexArray[i].z;
+
+        myParticles.push_back(Particle(x , y ,z ));
+
+    }
+
 
     cout << endl;
     cout << "Count number of particles within a radius of " << R << "." << endl;
@@ -128,12 +126,14 @@ int main()
     cout << "around particle p." << endl << endl;
     
     cout << "Computing result with brute force:" << endl;
+
+    double start = stopwatch();
     for (int i = 0; i < 120; i++)
     {
         cout << setw(3) << i << ": ";
         int count = 0;
         MyPoint pi(myParticles[i].pos);
-        for (int j = 0; j < NUM_PARTICLES; j++)
+        for (int j = 0; j < nPoints; j++)
         {
             if (i == j)
                 continue;
@@ -146,19 +146,22 @@ int main()
         if (i % 8 == 7)
             cout << endl;
     }
+
+    double T = stopwatch() - start;
+    printf("Brute Force in %.5f sec.\n", T);
     
     cout << endl << "Building octree." << endl;
     // Initialize octree.
     // Minimum coordinates.
     float min[3] = {0.0f, 0.0f, 0.0f};
     // Maximum coordinates.
-    float max[3] = {1.0f + EPSILON, 1.0f + EPSILON, 1.0f + EPSILON};
+    float max[3] = {211130.0, 211130.0, 211130.0};
     // Minimum size to use when subdividing cells.
     float cellSize[3] = {0.1, 0.1, 0.1};
     Octree<Node> octree(min, max, cellSize);
     
     // Add all particles to the octree.
-    for (int i = 0; i < NUM_PARTICLES; i++)
+    for (int i = 0; i < nPoints; i++)
     {
         Node& n = octree.getCell(myParticles[i].pos);
         n.particles.push_back(&myParticles[i]);
@@ -166,6 +169,8 @@ int main()
     cout << "Building octree done." << endl << endl;
     
     cout << "Computing result with octree:" << endl;
+
+    double start_octree = stopwatch();
 
     for (int i = 0; i < 120; i++)
     {
@@ -180,6 +185,7 @@ int main()
         if (i % 8 == 7)
             cout << endl;
     }
-
+    double T_octree = stopwatch() - start_octree;
+    printf("Octree in %.5f sec.\n", T_octree);
     return 0;
 }

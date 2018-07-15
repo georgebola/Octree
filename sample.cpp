@@ -6,7 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "obj_reader/obj_reader.cpp"
+#include "src/obj_reader/obj_reader.cpp"
 #include "Stopwatch.h"
 
 #include <pangolin/pangolin.h>
@@ -86,10 +86,10 @@ public:
 };
 
 
-objReader readObj(){
+objReader readObj(char* filename){
     objReader testobj;
 
-    char* filename = "Z6.obj";
+    //char* filename = "Z6.obj";
     testobj.objLoadFile(filename);
     testobj.objLoadModel();
     cout<<"No. of vertices: " << testobj.nVertex << endl;
@@ -98,10 +98,10 @@ objReader readObj(){
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
     
-    pointcloud = readObj();
+    pointcloud = readObj(argv[1]);
     const int nPoints = pointcloud.nVertex;
     cout << "Number of particles: " << nPoints << endl;
     cout << "Initializing particles, uniform distribution in cube ([0,1], [0,1], [0,1])." << endl;

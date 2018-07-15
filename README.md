@@ -23,5 +23,5 @@ make
 
 ## Testing ##
 ```
-./sample/sample
+./build/sample/sample Z6.obj
 ```
